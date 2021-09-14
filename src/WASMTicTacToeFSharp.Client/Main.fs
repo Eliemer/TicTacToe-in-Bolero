@@ -112,6 +112,9 @@ let view (model: Model) (dispatch: Dispatch<Message>) =
                 text "Restart Game"
             ]
         ]
+        footer [] [
+            text $"Tic Tac Toe favicon by Wolf B{'\u00f6'}se from the Noun Project"
+        ]
     ]
 
 type MyApp() =
