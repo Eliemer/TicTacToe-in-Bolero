@@ -6,51 +6,6 @@ open Bolero
 open Bolero.Html
 open Components
 
-type Model =
-    {
-        Cells: Cell.Cell array
-        CurrentPlayer: Mark
-        Winner: Mark option
-        Status: string
-        GameActive: bool
-    }
-
-let initModel () =
-    {
-        Cells = Array.init 9 (fun idx -> { Symbol = None; Index = idx })
-        CurrentPlayer = X
-        Winner = None
-        Status = ""
-        GameActive = true
-    }
-
-let checkWinner (cells : Cell.Cell array) : Mark option =
-    let winCond = [
-        // horizontal
-        [0;1;2]
-        [3;4;5]
-        [6;7;8]
-        // vertical
-        [0;3;6]
-        [1;4;7]
-        [2;5;8]
-        // diagonal
-        [0;4;8]
-        [2;4;6]
-    ]    
-
-    seq { for i in [0..7] do
-            let winC = winCond.[i]
-            let a = cells.[winC.[0]].Symbol
-            let b = cells.[winC.[1]].Symbol
-            let c = cells.[winC.[2]].Symbol
-            
-            if a.IsSome && a = b && b = c then a else None }
-    |> Seq.tryFind Option.isSome
-    |> Option.flatten
-
-
-/// The Elmish application's update messages.
 type Message =
     | SetSymbol of Cell.Cell * Mark
     | CheckWinner
@@ -58,9 +13,9 @@ type Message =
     | Draw
     | Restart
 
-let update message (model: Model) =
+let update (message: Message) (model: Model.Model) =
     match message with
-    | SetSymbol (cell, mark) -> 
+    | SetSymbol (cell, mark) ->
         match model.GameActive with
         | true ->
             match cell.Symbol with
@@ -73,21 +28,21 @@ let update message (model: Model) =
             model, Cmd.none
 
     | CheckWinner ->
-        match checkWinner model.Cells with
-        | Some winner -> 
+        match Cell.checkWinner model.Cells with
+        | Some winner ->
                 {model with Winner = Some winner; GameActive = false}, Cmd.ofMsg Winner
-        | None -> 
+        | None ->
             let symbols = Array.map (fun (e: Cell.Cell) -> e.Symbol ) model.Cells
             match Array.tryFind Option.isNone symbols with
-            | Some _ -> model, Cmd.none // There are still cells to be filled
-            | None -> { model with GameActive = false }, Cmd.ofMsg Draw // there are no more empty cells
+            | Some _ -> model, Cmd.none
+            // there are no more empty cells, call a Draw
+            | None -> { model with GameActive = false }, Cmd.ofMsg Draw
 
     | Draw -> {model with Status = $"Game has ended in a Draw!"}, Cmd.none
     | Winner -> {model with Status = $"Player {model.Winner.Value} has won!"}, Cmd.none
-    | Restart -> initModel (), Cmd.none
+    | Restart -> Model.initModel (), Cmd.none
 
-
-let view (model: Model) (dispatch: Dispatch<Message>) =
+let view (model: Model.Model) (dispatch: Dispatch<Message>) =
     section [] [
         h1 [
             attr.``class`` "game--title"
@@ -97,8 +52,8 @@ let view (model: Model) (dispatch: Dispatch<Message>) =
                 attr.``class`` "game--container"
             ] [
                 // TODO: refactor + cleanup
-                forEach model.Cells <| (fun cell -> 
-                    Cell.Cell cell (fun _ -> dispatch <| SetSymbol (cell, model.CurrentPlayer)))
+                forEach model.Cells <| (fun cell ->
+                    Cell.initCell cell (fun _ -> dispatch <| SetSymbol (cell, model.CurrentPlayer)))
             ]
             h2 [
                 attr.``class`` "game--status"
@@ -118,8 +73,8 @@ let view (model: Model) (dispatch: Dispatch<Message>) =
     ]
 
 type MyApp() =
-    inherit ProgramComponent<Model, Message>()
+    inherit ProgramComponent<Model.Model, Message>()
 
     override this.Program =
-        Program.mkProgram (fun _ -> initModel (), Cmd.none) update view
+        Program.mkProgram (fun _ -> Model.initModel (), Cmd.none) update view
         |> Program.withConsoleTrace
