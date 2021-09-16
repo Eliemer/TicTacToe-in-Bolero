@@ -12,7 +12,7 @@ module Model =
 
     let initModel () =
         {
-            Cells = Array.init 9 (fun idx -> { Symbol = None; Index = idx })
+            Cells = Array.init 9 (fun idx -> { Symbol = None; Index = idx; OnClick = fun _ -> () })
             CurrentPlayer = X
             Winner = None
             Status = ""

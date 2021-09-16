@@ -26,7 +26,7 @@ let update (message: Message) (model: Model.Model) =
                 { model with CurrentPlayer = nextMark }, Cmd.ofMsg CheckWinner
         | false ->
             model, Cmd.none
-
+    
     | CheckWinner ->
         match Cell.checkWinner model.Cells with
         | Some winner ->
@@ -53,7 +53,7 @@ let view (model: Model.Model) (dispatch: Dispatch<Message>) =
             ] [
                 // TODO: refactor + cleanup
                 forEach model.Cells <| (fun cell ->
-                    Cell.initCell cell (fun _ -> dispatch <| SetSymbol (cell, model.CurrentPlayer)))
+                    Cell.initCell { cell with OnClick = (fun _ -> dispatch <| SetSymbol (cell, model.CurrentPlayer)) } )
             ]
             h2 [
                 attr.``class`` "game--status"

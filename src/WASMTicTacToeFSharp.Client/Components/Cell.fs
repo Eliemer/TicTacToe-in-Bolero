@@ -2,6 +2,7 @@
 
 open Bolero
 open Bolero.Html
+open Microsoft
 
 type Mark = X | O
 
@@ -10,13 +11,15 @@ module Cell =
         {
             Symbol : Mark option
             Index : int
+            OnClick : AspNetCore.Components.Web.MouseEventArgs -> unit
         }
 
-    let initCell (model: Cell) onClickCallback =
+
+    let initCell (model: Cell) =
         div [
             "data-cell-index" => model.Index
             attr.``class`` "cell"
-            on.click onClickCallback
+            on.click model.OnClick
         ] [
             cond model.Symbol <| function
                 | Some mark -> text <| $"{mark}"
